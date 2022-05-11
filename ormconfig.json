@@ -1,0 +1,16 @@
+{
+  "type":"mysql",
+  "host":"localhost",
+  "port":3306,
+  "username":"root",
+  "password":"",
+  "database":"node_admin",
+  "charset":"utf8",
+  "collation" :"utf8_unicode_ci",
+  "entities":[
+    "src/entity/*.ts"
+  ],
+  "logging": false,
+  "synchronize": true
+
+}
