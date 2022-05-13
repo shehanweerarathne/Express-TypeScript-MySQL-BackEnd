@@ -8,6 +8,7 @@ createConnection().then(connection => {
 
     const app = express();
     app.use(express.json());
+    console.log("Server Started")
     app.use(cors({
         credentials:true,
         origin: ["http://localhost:3000"]
