@@ -13,7 +13,7 @@ export const AuthMiddleware = async (req: Request, res: Response, next: Function
                 return res.status(401).send({message: "Unauthenticated"});
             }
             const repository = getManager().getRepository(User);
-            req["user"] = await repository.findOne({where: {id: payload.id}});
+            req["user"] = await repository.findOne({where: {id: payload.id},relations:['role','role.permissions']});
             next();
         }
         else {
