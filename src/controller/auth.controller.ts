@@ -5,6 +5,7 @@ import {User} from "../entity/user.entity";
 import bcyptjs from "bcryptjs"
 import {sign, verify} from "jsonwebtoken";
 import {environment} from "../environment";
+import {Order} from "../entity/order.entity";
 
 export const Register = async (req: Request, res: Response) => {
     const body = req.body;
@@ -18,13 +19,23 @@ export const Register = async (req: Request, res: Response) => {
 
     const repository = getManager().getRepository(User);
 
-    const {password,...user} = await repository.save({
-        first_name:body.first_name,
-        last_name:body.last_name,
-        email:body.email,
-        password: await bcyptjs.hash(body.password,10)
-    });
-    res.send(user);
+    try {
+        const {password,...user} = await repository.save({
+            first_name:body.first_name,
+            last_name:body.last_name,
+            email:body.email,
+            password: await bcyptjs.hash(body.password,10),
+            role: {
+                id:3
+            }
+        });
+        res.send(user);
+    }catch (e) {
+        return res.status(403).send({
+            Error:e
+        })
+    }
+
 }
 
 export const Login = async (req: Request, res: Response) => {
@@ -42,21 +53,28 @@ export const Login = async (req: Request, res: Response) => {
         return res.status(400).send({message: 'Invalid Credentials'})
     }
 
-    const payload = {
-        id:user.id
+    try {
+        const payload = {
+            id:user.id
+        }
+
+        const token = sign(payload,environment.SECRET_KEY);
+
+
+
+        res.cookie('jwt',token, {
+            httpOnly: true,
+            maxAge: 24*60*60*1000
+        })
+
+        const {password,...data} = user;
+        res.send({
+            token: token
+        });
+        console.log(token)
+    }catch (e) {
+        return res.status(400).send({message: 'Invalid Credentials'})
     }
-
-    const token = sign(payload,environment.SECRET_KEY);
-
-    res.cookie('jwt',token, {
-        httpOnly: true,
-        maxAge: 24*60*60*1000
-    })
-
-    const {password,...data} = user;
-    res.send({
-        token: token
-    });
 }
 export const AuthenticatedUser = async (req: Request, res: Response) => {
     const {password,...user} = req['user'];

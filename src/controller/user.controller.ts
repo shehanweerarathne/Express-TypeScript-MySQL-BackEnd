@@ -3,31 +3,58 @@ import {getManager} from "typeorm";
 import {User} from "../entity/user.entity";
 import bcyptjs from "bcryptjs";
 
+
+
 export const Users = async (req: Request, res: Response) => {
+    const take = 7;
+
+
+    const page = parseInt(req.query.page as string || '1');
     const repository = getManager().getRepository(User);
-    const users = await repository.find({
-        relations:['role']
-    });
-    res.send(users.map(u => {
-        const {password,...users} = u;
-        return users;
-    }));
+
+    try {
+        const [data,total] = await repository.findAndCount({
+            relations:['role'],
+            take,
+            skip:(page - 1) * take
+        });
+        res.send({
+            data,
+            meta:{
+                total,
+                page,
+                last_page: Math.ceil(total/take)
+            }
+        });
+    }catch (e){
+        return res.status(403).send({
+            Error:e
+        })
+    }
+
 }
 
 export const CreateUser = async (req: Request, res: Response) => {
     const {roleId,...body} = req.body;
     const hashedPassword = await bcyptjs.hash('1204',10);
     const repository = getManager().getRepository(User);
+    try {
+        const {password,...user} = await repository.save({
+            ...body,
+            password: hashedPassword,
+            role: {
+                id:roleId
+            }
+        });
+        console.log(body);
+        res.send(user);
+    }catch (e) {
+        console.log(e);
+        return res.status(403).send({
+            Error:e
+        });
+    }
 
-    const {password,...user} = await repository.save({
-        ...body,
-        password: hashedPassword,
-        role: {
-            id:roleId
-        }
-    });
-    console.log(body);
-    res.send(user);
 }
 export const GetUser = async (req: Request, res: Response) => {
     const repository = getManager().getRepository(User);

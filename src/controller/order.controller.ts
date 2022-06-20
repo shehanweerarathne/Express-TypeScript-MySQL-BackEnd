@@ -14,21 +14,28 @@ export const Orders = async (req: Request, res: Response) => {
         skip:(page - 1) * take,
         relations:['order_items']
     });
-    res.send({
-        data:data.map((order:Order)=>({
-            id:order.id,
-            name:order.name,
-            email:order.email,
-            total:order.total,
-            created_at:order.created_at,
-            order_items:order.order_items
-        })),
-        meta:{
-            total,
-            page,
-            last_page: Math.ceil(total/take)
-        }
-    });
+    try {
+        res.send({
+            data:data.map((order:Order)=>({
+                id:order.id,
+                name:order.name,
+                email:order.email,
+                total:order.total,
+                created_at:order.created_at,
+                order_items:order.order_items
+            })),
+            meta:{
+                total,
+                page,
+                last_page: Math.ceil(total/take)
+            }
+        });
+    }catch (e) {
+        return res.status(403).send({
+            message: e
+        })
+    }
+
 }
 
 export const Export = async (req: Request, res: Response) => {
